@@ -20,6 +20,24 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
+        stage('Test SSH Connection') {
+    steps {
+        withCredentials([
+            sshUserPrivateKey(
+                credentialsId: 'day-7-app-ec2',
+                keyFileVariable: 'SSH_KEY',
+                usernameVariable: 'SSH_USER'
+            )
+        ]) {
+            sh '''
+                ssh -i "$SSH_KEY" \
+                    -o StrictHostKeyChecking=no \
+                    "$SSH_USER@172.31.4.32" \
+                    "hostname && whoami"
+            '''
+        }
+    }
+}
 
     }
 }
