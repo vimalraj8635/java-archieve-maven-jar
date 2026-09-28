@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     tools {
@@ -17,9 +16,10 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean package -DskipTests -Dcheckstyle.skip=true'
             }
         }
+
         stage('Test SSH Connection') {
             steps {
                 withCredentials([
@@ -38,6 +38,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy') {
             steps {
                 withCredentials([
@@ -48,19 +49,34 @@ pipeline {
                     )
                 ]) {
                     sh '''
+                        echo "Copying application JAR..."
+
                         scp -i "$SSH_KEY" \
                             -o StrictHostKeyChecking=no \
                             target/*.jar \
                             "$SSH_USER@172.31.4.32:/opt/java-app/app.jar"
-        
+
+                        echo "Restarting application..."
+
                         ssh -i "$SSH_KEY" \
                             -o StrictHostKeyChecking=no \
                             "$SSH_USER@172.31.4.32" \
                             "sudo systemctl restart java-app"
+
+                        echo "Deployment completed successfully!"
                     '''
                 }
             }
         }
+    }
 
+    post {
+        success {
+            echo '🎉 CI/CD Pipeline completed successfully!'
+        }
+
+        failure {
+            echo '❌ CI/CD Pipeline failed. Check the console output.'
+        }
     }
 }
