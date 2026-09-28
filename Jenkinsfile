@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/<username>/java-devops-cicd.git'
+                    url: 'https://github.com/vimalraj8635/java-archieve-maven-jar.git'
             }
         }
 
